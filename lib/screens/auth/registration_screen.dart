@@ -339,23 +339,44 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               TextFormField(
                 controller: _emergencyContactNameController,
                 decoration: const InputDecoration(
-                  labelText: 'Emergency Contact Name',
+                  labelText: 'Emergency Contact Name *', // Added asterisk
                   prefixIcon: Icon(Icons.contact_emergency),
                   border: OutlineInputBorder(),
                 ),
+                validator: (value) {
+                  if (value?.isEmpty ?? true) {
+                    return 'Emergency contact name is required';
+                  }
+                  if (value!.length < 2) {
+                    return 'Please enter a valid name';
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 16),
 
               TextFormField(
                 controller: _emergencyContactPhoneController,
                 decoration: const InputDecoration(
-                  labelText: 'Emergency Contact Phone',
+                  labelText: 'Emergency Contact Phone *', // Added asterisk
                   prefixIcon: Icon(Icons.phone),
                   border: OutlineInputBorder(),
+                  hintText: 'e.g., +1234567890',
                 ),
                 keyboardType: TextInputType.phone,
+                validator: (value) {
+                  if (value?.isEmpty ?? true) {
+                    return 'Emergency contact phone is required';
+                  }
+                  // Basic phone number validation (you can adjust the regex pattern as needed)
+                  final phoneRegex = RegExp(r'^\+?[\d\s-]{8,}$');
+                  if (!phoneRegex.hasMatch(value!)) {
+                    return 'Please enter a valid phone number';
+                  }
+                  return null;
+                },
               ),
-              const SizedBox(height: 32),
+
 
               ElevatedButton(
                 onPressed: _isLoading ? null : _handleRegistration,
@@ -417,7 +438,9 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
           medicalConditions: _selectedMedicalConditions,
           disabilities: _selectedDisabilities,
           allergies: _selectedAllergies,
-          createdAt: DateTime.parse('2025-02-21 14:38:32'),
+          emergencyContactName: _emergencyContactNameController.text, // Add this
+          emergencyContactPhone: _emergencyContactPhoneController.text, // Add this
+          createdAt: DateTime.now().toUtc(), // Use current time instead of hardcoded
         );
 
         await _authService.signUp(
@@ -432,13 +455,16 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
             (route) => false,
           );
         }
-
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(e.toString()),
+              content: Text('Registration failed: ${e.toString()}'),
               backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
           );
         }
@@ -456,11 +482,10 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     _emailController.dispose();
     _passwordController.dispose();
     _ageController.dispose();
-    _bloodGroupController.dispose();
-    _heightController.dispose();
-    _weightController.dispose();
     _emergencyContactNameController.dispose();
     _emergencyContactPhoneController.dispose();
     super.dispose();
   }
 }
+
+  

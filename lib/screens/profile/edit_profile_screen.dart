@@ -29,6 +29,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final List<String> _medicalConditions = [];
   final List<String> _disabilities = [];
   final List<String> _allergies = [];
+  final _emergencyContactNameController = TextEditingController();
+  final _emergencyContactPhoneController = TextEditingController();
 
   final List<String> _bloodGroups = [
     'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'
@@ -55,6 +57,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       _medicalConditions.addAll(widget.initialData!.medicalConditions);
       _disabilities.addAll(widget.initialData!.disabilities);
       _allergies.addAll(widget.initialData!.allergies);
+      _emergencyContactNameController.text = widget.initialData!.emergencyContactName;
+      _emergencyContactPhoneController.text = widget.initialData!.emergencyContactPhone;
     }
   }
 
@@ -113,6 +117,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         medicalConditions: _medicalConditions,
         disabilities: _disabilities,
         allergies: _allergies,
+        emergencyContactName: _emergencyContactNameController.text,
+        emergencyContactPhone: _emergencyContactPhoneController.text,
         createdAt: widget.initialData?.createdAt ?? _currentTime,
       );
 
@@ -203,7 +209,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   )
                 : const Text(
                     'Save',
-                    style: TextStyle(color: Colors.white),
+                    style: TextStyle(color: Colors.blue),
                   ),
           ),
         ],
@@ -357,6 +363,57 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               () => _addItem('Allergy', _allergies),
             ),
             const SizedBox(height: 32),
+
+            const SizedBox(height: 24),
+            const Text(
+              'Emergency Contact',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _emergencyContactNameController,
+              decoration: const InputDecoration(
+                labelText: 'Emergency Contact Name *',
+                prefixIcon: Icon(Icons.contact_emergency),
+                border: OutlineInputBorder(),
+              ),
+              textCapitalization: TextCapitalization.words,
+              validator: (value) {
+                if (value?.isEmpty ?? true) {
+                  return 'Emergency contact name is required';
+                }
+                if (value!.length < 2) {
+                  return 'Please enter a valid name';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _emergencyContactPhoneController,
+              decoration: const InputDecoration(
+                labelText: 'Emergency Contact Phone *',
+                prefixIcon: Icon(Icons.phone),
+                border: OutlineInputBorder(),
+                hintText: 'e.g., +1234567890',
+              ),
+              keyboardType: TextInputType.phone,
+              validator: (value) {
+                if (value?.isEmpty ?? true) {
+                  return 'Emergency contact phone is required';
+                }
+                // Basic phone number validation
+                final phoneRegex = RegExp(r'^\+?[\d\s-]{8,}$');
+                if (!phoneRegex.hasMatch(value!)) {
+                  return 'Please enter a valid phone number';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 32),
           ],
         ),
       ),
@@ -369,6 +426,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _ageController.dispose();
     _heightController.dispose();
     _weightController.dispose();
+    _emergencyContactNameController.dispose();
+    _emergencyContactPhoneController.dispose();
     super.dispose();
   }
 }

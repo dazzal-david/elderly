@@ -17,6 +17,43 @@ class _ConnectScreenState extends State<ConnectScreen> {
   final ScrollController _scrollController = ScrollController();
   bool _isRefreshing = false;
 
+  Future<void> _handleRefresh() async {
+    setState(() {
+      _isRefreshing = true;
+    });
+
+    try {
+      // Force refresh the posts stream
+      await _socialService.refreshPosts();
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Posts refreshed'),
+            duration: Duration(seconds: 1),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error refreshing: $e'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isRefreshing = false;
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -38,11 +75,11 @@ class _ConnectScreenState extends State<ConnectScreen> {
             padding: const EdgeInsets.only(right: 8.0),
             child: IconButton(
               icon: Icon(
-                Icons.group_add_rounded,
+                Icons.manage_accounts_rounded,
                 color: colorScheme.primary,
                 size: 28,
               ),
-              tooltip: 'Find Friends',
+              tooltip: 'Manage Posts',
               onPressed: () {
                 // TODO: Implement find friends feature
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -62,15 +99,7 @@ class _ConnectScreenState extends State<ConnectScreen> {
       body: RefreshIndicator(
         color: colorScheme.primary,
         backgroundColor: colorScheme.surface,
-        onRefresh: () async {
-          setState(() {
-            _isRefreshing = true;
-          });
-          await Future.delayed(const Duration(milliseconds: 800));
-          setState(() {
-            _isRefreshing = false;
-          });
-        },
+        onRefresh: _handleRefresh,
         child: StreamBuilder<List<SocialPost>>(
           stream: _socialService.getPostsStream(),
           builder: (context, snapshot) {

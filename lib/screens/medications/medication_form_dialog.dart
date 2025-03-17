@@ -23,6 +23,7 @@ class _MedicationFormDialogState extends State<MedicationFormDialog> {
   final List<TimeOfDay> _scheduleTime = [];
   DateTime? _startDate;
   DateTime? _endDate;
+  
   bool _isLoading = false;
 
   // Get current user's username
@@ -33,7 +34,7 @@ class _MedicationFormDialogState extends State<MedicationFormDialog> {
   }
 
   // Current timestamp
-  static final DateTime _currentTime = DateTime.parse('2025-02-21 14:55:44');
+  static final DateTime _currentTime = DateTime.parse('2025-03-11 06:56:40');
 
   @override
   void initState() {
@@ -306,6 +307,7 @@ class _MedicationFormDialogState extends State<MedicationFormDialog> {
       }
     }
   }
+
 
   @override
   void dispose() {

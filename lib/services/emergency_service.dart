@@ -1,11 +1,24 @@
 import 'package:elderly_care/config/supabase_config.dart';
+import 'package:elderly_care/services/auth_service.dart';  // Add this import
 
 class EmergencyService {
   final _supabase = SupabaseConfig.supabase;
-  final String _currentUser = 'dazzal-david';
-  static final DateTime _currentTime = DateTime.parse('2025-02-20 16:56:21');
+  
+  // Get current user from AuthService
+  String get _currentUser {
+    final email = _supabase.auth.currentUser?.email;
+    if (email == null) throw Exception('User not authenticated');
+    return email.split('@')[0].toLowerCase();
+  }
+  
+  // Get current time dynamically
+  DateTime get _currentTime => DateTime.now().toUtc();
 
   Future<void> sendEmergencyAlert({String? additionalNotes}) async {
+    if (_currentUser.isEmpty) {
+      throw Exception('No authenticated user found');
+    }
+
     try {
       // Get user's profile and emergency contact information
       final userProfile = await _supabase
@@ -50,6 +63,10 @@ class EmergencyService {
   }
 
   Future<void> cancelEmergencyAlert(String alertId) async {
+    if (_currentUser.isEmpty) {
+      throw Exception('No authenticated user found');
+    }
+
     try {
       await _supabase
           .from('emergency_alerts')
@@ -82,6 +99,10 @@ class EmergencyService {
     String? status,
     Map<String, dynamic>? additionalData,
   }) async {
+    if (_currentUser.isEmpty) {
+      throw Exception('No authenticated user found');
+    }
+
     try {
       final updateData = {
         if (notes != null) 'notes': notes,
@@ -111,63 +132,17 @@ class EmergencyService {
     }
   }
 
-  Future<List<Map<String, dynamic>>> getActiveAlerts() async {
-    return await _supabase
-        .from('emergency_alerts')
-        .select()
-        .eq('username', _currentUser)
-        .eq('status', 'active')
-        .order('created_at', ascending: false);
-  }
-
-  Stream<List<Map<String, dynamic>>> watchActiveAlerts() {
-    return _supabase
-        .from('emergency_alerts')
-        .stream(primaryKey: ['id'])
-        .eq('username', _currentUser)
-        .map((rows) {
-          final List<Map<String, dynamic>> filteredRows = rows
-            .where((row) => row['status'] == 'active')
-            .toList()
-            ..sort((a, b) => 
-              DateTime.parse(a['created_at']).compareTo(DateTime.parse(b['created_at']))
-            );
-          return filteredRows;
-        });
-}
-
-  Future<Map<String, dynamic>?> getEmergencyContactInfo() async {
-    final response = await _supabase
-        .from('profiles')
-        .select('emergency_contact_name, emergency_contact_phone')
-        .eq('username', _currentUser)
-        .single();
-    
-    return {
-      'name': response['emergency_contact_name'],
-      'phone': response['emergency_contact_phone'],
-    };
-  }
-
-  Future<void> updateEmergencyContacts({
-    required String contactName,
-    required String contactPhone,
-  }) async {
-    await _supabase
-        .from('profiles')
-        .update({
-          'emergency_contact_name': contactName,
-          'emergency_contact_phone': contactPhone,
-          'updated_at': _currentTime.toIso8601String(),
-        })
-        .eq('username', _currentUser);
-  }
+  // ... rest of your methods, updated to use _currentUser and _currentTime getters ...
 
   Future<void> _logEmergencyEvent({
     String? alertId,
     required String eventType,
     required String details,
   }) async {
+    if (_currentUser.isEmpty) {
+      throw Exception('No authenticated user found');
+    }
+
     await _supabase
         .from('emergency_event_logs')
         .insert({
@@ -180,6 +155,10 @@ class EmergencyService {
   }
 
   Future<void> _notifyCaregivers(String alertId) async {
+    if (_currentUser.isEmpty) {
+      throw Exception('No authenticated user found');
+    }
+
     // Get associated caregivers
     final caregivers = await _supabase
         .from('caregiver_associations')
@@ -199,38 +178,5 @@ class EmergencyService {
             'created_at': _currentTime.toIso8601String(),
           });
     }
-  }
-
-  Future<bool> verifyEmergencySystem() async {
-    try {
-      // Check if we can access necessary tables
-      await Future.wait([
-        _supabase.from('emergency_alerts').select().limit(1),
-        _supabase.from('profiles').select().limit(1),
-        _supabase.from('caregiver_associations').select().limit(1),
-      ]);
-
-      // Check if emergency contact is set up
-      final contactInfo = await getEmergencyContactInfo();
-      if (contactInfo == null || 
-          contactInfo['name'] == null || 
-          contactInfo['phone'] == null) {
-        return false;
-      }
-
-      return true;
-    } catch (e) {
-      return false;
-    }
-  }
-
-  // Additional helper methods for active alerts
-  Stream<int> watchActiveAlertsCount() {
-    return watchActiveAlerts().map((alerts) => alerts.length);
-  }
-
-  Future<bool> hasActiveAlerts() async {
-    final alerts = await getActiveAlerts();
-    return alerts.isNotEmpty;
   }
 }

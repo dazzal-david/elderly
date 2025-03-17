@@ -4,7 +4,8 @@ import 'package:elderly_care/models/medication_model.dart';
 class MedicationService {
   final _supabase = SupabaseConfig.supabase;
   static const String _tableName = 'medications';
-  static final DateTime _currentTime = DateTime.parse('2025-02-21 14:53:12');
+  DateTime get _currentTime => DateTime.now().toUtc();
+
 
   // Get current user's username dynamically
   String get _currentUser {
@@ -63,16 +64,30 @@ class MedicationService {
   // Update all other methods to use the getter instead of the hardcoded value
   Future<Medication> addMedication(Medication medication) async {
     try {
-      final response = await _supabase.from(_tableName).insert({
-        ...medication.toJson(),
+      final medicationData = {
         'username': _currentUser,
+        'name': medication.name,
+        'dosage': medication.dosage,
+        'schedule': medication.schedule.map((time) => time.toIso8601String()).toList(),
+        'instructions': medication.instructions,
+        'start_date': medication.startDate.toIso8601String(),
+        'end_date': medication.endDate?.toIso8601String(),
+        'is_active': true,
+        'prescribed_by': _currentUser,
         'created_at': _currentTime.toIso8601String(),
-      }).select().single();
+        'updated_at': _currentTime.toIso8601String(),
+      };
+
+      final response = await _supabase
+          .from(_tableName)
+          .insert(medicationData)
+          .select()
+          .single();
       
       return Medication.fromJson(response);
     } catch (e) {
       print('Error in addMedication: $e');
-      rethrow;
+      throw Exception('Failed to add medication: $e');
     }
   }
 

@@ -1,6 +1,5 @@
 import 'package:elderly_care/models/vital_model.dart';
 import 'package:elderly_care/config/supabase_config.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 class VitalsService {
   final _supabase = SupabaseConfig.supabase;

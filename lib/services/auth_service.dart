@@ -4,7 +4,7 @@ import 'package:elderly_care/models/user_model.dart';
 
 class AuthService {
   final _supabase = SupabaseConfig.supabase;
-  static final DateTime _currentTime = DateTime.parse('2025-02-21 14:48:01');
+  DateTime get _currentTime => DateTime.now().toUtc();
 
   Future<void> signIn({
     required String email,
@@ -88,6 +88,8 @@ class AuthService {
         'medical_conditions': userData.medicalConditions,
         'disabilities': userData.disabilities,
         'allergies': userData.allergies,
+        'emergency_contact_name': userData.emergencyContactName,
+        'emergency_contact_phone': userData.emergencyContactPhone,
         'created_at': _currentTime.toIso8601String(),
         'updated_at': _currentTime.toIso8601String(),
       }).select();
@@ -147,6 +149,8 @@ class AuthService {
             'medical_conditions': userData.medicalConditions,
             'disabilities': userData.disabilities,
             'allergies': userData.allergies,
+            'emergency_contact_name': userData.emergencyContactName,
+            'emergency_contact_phone': userData.emergencyContactPhone,
             'updated_at': _currentTime.toIso8601String(),
           })
           .eq('username', username)

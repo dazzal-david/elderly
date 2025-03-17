@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:elderly_care/widgets/vitals_section.dart';
 import 'package:elderly_care/widgets/medications_list.dart';
 import 'package:elderly_care/widgets/reminders_list.dart';
-import 'package:elderly_care/services/emergency_service.dart';
 import 'package:elderly_care/services/auth_service.dart';
 import 'package:elderly_care/screens/auth/login_screen.dart';
+import 'package:elderly_care/widgets/emergency_button.dart';
 import 'package:elderly_care/screens/medications/medications_screen.dart';
 
 class DashboardScreen extends StatelessWidget {
@@ -177,27 +177,10 @@ class DashboardScreen extends StatelessWidget {
   }
 
   Widget _buildEmergencyButton(BuildContext context) {
-    return ElevatedButton.icon(
-      onPressed: () async {
-        await EmergencyService().sendEmergencyAlert();
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Emergency alert sent to caregiver'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      },
-      icon: const Icon(Icons.emergency),
-      label: const Text('Emergency'),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.red,
-        foregroundColor: Colors.white,
-        padding: const EdgeInsets.symmetric(vertical: 16),
-      ),
-    );
+  return const EmergencyButton();
   }
+
+
   Widget _buildAppointmentButton(BuildContext context) {
     return ElevatedButton.icon(
       onPressed: () {

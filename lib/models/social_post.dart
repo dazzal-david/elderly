@@ -5,7 +5,7 @@ class SocialPost {
   final String authorAvatar;
   final String content;
   final String? imageUrl;
-  final int likesCount;
+  final int likesCount; 
   final int commentsCount;
   final bool isLiked;
   final DateTime createdAt;

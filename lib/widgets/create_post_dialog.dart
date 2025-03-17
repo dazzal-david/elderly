@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:elderly_care/services/social_service.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 class CreatePostDialog extends StatefulWidget {
   const CreatePostDialog({super.key});
@@ -11,11 +13,97 @@ class CreatePostDialog extends StatefulWidget {
 class _CreatePostDialogState extends State<CreatePostDialog> {
   final _contentController = TextEditingController();
   final _socialService = SocialService();
+  final _imagePicker = ImagePicker();
   final int _maxCharCount = 500;
   
   bool _isLoading = false;
   String? _imageUrl;
-  bool get _isPostEmpty => _contentController.text.trim().isEmpty && _imageUrl == null;
+  File? _imageFile;
+  bool get _isPostEmpty => _contentController.text.trim().isEmpty && _imageFile == null;
+
+  Future<void> _pickImage() async {
+    try {
+      final XFile? image = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1200,
+        maxHeight: 1200,
+        imageQuality: 85,
+      );
+
+      if (image != null) {
+        setState(() {
+          _imageFile = File(image.path);
+          _imageUrl = null; // Clear any existing URL
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error picking image: $e'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _handleSubmit() async {
+    if (_isPostEmpty) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      String? finalImageUrl;
+      
+      // Upload image if selected
+      if (_imageFile != null) {
+        final xFile = XFile(_imageFile!.path);
+        finalImageUrl = await _socialService.uploadImage(xFile);
+      }
+
+      // Create post with image URL if available
+      await _socialService.createPost(
+        _contentController.text,
+        imageUrl: finalImageUrl,
+      );
+
+      if (mounted) {
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Post created successfully!'),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -66,10 +154,7 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
             ),
             
             const SizedBox(height: 16),
-            
-            // Divider
             Divider(color: colorScheme.onSurface.withOpacity(0.1)),
-            
             const SizedBox(height: 16),
             
             // Text input
@@ -114,13 +199,13 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
             const SizedBox(height: 16),
             
             // Image preview
-            if (_imageUrl != null) ...[
+            if (_imageFile != null) ...[
               ClipRRect(
                 borderRadius: BorderRadius.circular(12),
                 child: Stack(
                   children: [
-                    Image.network(
-                      _imageUrl!,
+                    Image.file(
+                      _imageFile!,
                       height: 150,
                       width: double.infinity,
                       fit: BoxFit.cover,
@@ -129,7 +214,10 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
                       top: 8,
                       right: 8,
                       child: GestureDetector(
-                        onTap: () => setState(() => _imageUrl = null),
+                        onTap: () => setState(() {
+                          _imageFile = null;
+                          _imageUrl = null;
+                        }),
                         child: Container(
                           padding: const EdgeInsets.all(4),
                           decoration: BoxDecoration(
@@ -159,7 +247,7 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
               child: Material(
                 color: Colors.transparent,
                 child: InkWell(
-                  onTap: _pickImage,
+                  onTap: _isLoading ? null : _pickImage,
                   borderRadius: BorderRadius.circular(12),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
@@ -246,67 +334,6 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
         ),
       ),
     );
-  }
-
-  Future<void> _pickImage() async {
-    // TODO: Implement image picking
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Image upload coming soon!'),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
-      ),
-    );
-    
-    // For demonstration purposes, let's set a placeholder image
-    setState(() {
-      _imageUrl = 'https://via.placeholder.com/400x300';
-    });
-  }
-
-  Future<void> _handleSubmit() async {
-    if (_isPostEmpty) {
-      return;
-    }
-
-    setState(() => _isLoading = true);
-
-    try {
-      await _socialService.createPost(
-        _contentController.text,
-        imageUrl: _imageUrl,
-      );
-      if (mounted) {
-        Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Post created successfully!'),
-            backgroundColor: Colors.green,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-          ),
-        );
-      }
-    } finally {
-      setState(() => _isLoading = false);
-    }
   }
 
   @override
