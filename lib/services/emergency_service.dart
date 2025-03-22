@@ -1,5 +1,4 @@
 import 'package:elderly_care/config/supabase_config.dart';
-import 'package:elderly_care/services/auth_service.dart';  // Add this import
 
 class EmergencyService {
   final _supabase = SupabaseConfig.supabase;

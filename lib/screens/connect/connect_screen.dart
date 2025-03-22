@@ -4,6 +4,7 @@ import 'package:elderly_care/services/social_service.dart';
 import 'package:elderly_care/widgets/post_card.dart';
 import 'package:elderly_care/widgets/create_post_dialog.dart';
 import 'package:elderly_care/widgets/comments_sheet.dart';
+import 'package:elderly_care/screens/connect/manage_posts_screen.dart';
 
 class ConnectScreen extends StatefulWidget {
   const ConnectScreen({super.key});
@@ -80,15 +81,12 @@ class _ConnectScreenState extends State<ConnectScreen> {
                 size: 28,
               ),
               tooltip: 'Manage Posts',
+              // In ConnectScreen class, update the IconButton's onPressed callback:
               onPressed: () {
-                // TODO: Implement find friends feature
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: const Text('Coming soon!'),
-                    behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ManagePostsScreen(),
                   ),
                 );
               },

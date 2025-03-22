@@ -1,6 +1,5 @@
 import 'package:elderly_care/screens/base_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:elderly_care/config/supabase_config.dart';
 import 'package:elderly_care/screens/auth/login_screen.dart';
 class SplashScreen extends StatefulWidget {

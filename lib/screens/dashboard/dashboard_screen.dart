@@ -6,6 +6,8 @@ import 'package:elderly_care/services/auth_service.dart';
 import 'package:elderly_care/screens/auth/login_screen.dart';
 import 'package:elderly_care/widgets/emergency_button.dart';
 import 'package:elderly_care/screens/medications/medications_screen.dart';
+import 'package:elderly_care/screens/hospital_search_screen.dart'; // Import the new screen
+
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -184,7 +186,12 @@ class DashboardScreen extends StatelessWidget {
   Widget _buildAppointmentButton(BuildContext context) {
     return ElevatedButton.icon(
       onPressed: () {
-        Navigator.pushNamed(context, '/book-appointment');
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const SearchScreen(), // Navigate to the new screen
+          ),
+        );
       },
       icon: const Icon(Icons.calendar_today),
       label: const Text('Book Appointment'),

@@ -12,8 +12,6 @@ class VitalsScreen extends StatefulWidget {
 
 class _VitalsScreenState extends State<VitalsScreen> {
   final VitalsService _vitalsService = VitalsService();
-  final DateTime _currentTime = DateTime.parse('2025-03-10 18:54:48');
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
