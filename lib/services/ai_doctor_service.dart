@@ -13,7 +13,7 @@ class AIDoctorService {
   final _vitalsService = VitalsService();
 
   // Use dynamic current time and user
-  DateTime get _currentTime => DateTime.parse('2025-03-11 07:40:26');
+  DateTime get _currentTime => DateTime.now().toUtc();
   
   String get _currentUser {
     final email = _supabase.auth.currentUser?.email;

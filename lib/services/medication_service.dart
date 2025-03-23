@@ -4,6 +4,7 @@ import 'package:elderly_care/models/medication_model.dart';
 class MedicationService {
   final _supabase = SupabaseConfig.supabase;
   static const String _tableName = 'medications';
+   static const String _logsTable = 'medication_logs';
   DateTime get _currentTime => DateTime.now().toUtc();
 
 
@@ -127,7 +128,7 @@ class MedicationService {
 
   Future<void> markMedicationTaken(String medicationId, DateTime scheduleTime) async {
     try {
-      await _supabase.from('medication_logs').insert({
+      await _supabase.from(_logsTable).insert({
         'medication_id': medicationId,
         'username': _currentUser,
         'taken_at': _currentTime.toIso8601String(),
@@ -136,6 +137,89 @@ class MedicationService {
     } catch (e) {
       print('Error in markMedicationTaken: $e');
       rethrow;
+    }
+  }
+
+  // Add a new method to undo marking a medication as taken
+  Future<void> undoMedicationTaken(String medicationId, DateTime scheduleTime) async {
+    try {
+      // Get today's start and end times
+      final now = _currentTime;
+      final startOfDay = DateTime(now.year, now.month, now.day);
+      final endOfDay = startOfDay.add(const Duration(days: 1));
+      
+      // Create a datetime with today's date but with scheduled time's hour and minute
+      final scheduledDateTime = DateTime(
+        now.year,
+        now.month,
+        now.day,
+        scheduleTime.hour,
+        scheduleTime.minute,
+      );
+      
+      // Find and delete the matching log
+      final logs = await _supabase
+          .from(_logsTable)
+          .select()
+          .eq('medication_id', medicationId)
+          .eq('username', _currentUser)
+          .gte('taken_at', startOfDay.toIso8601String())
+          .lt('taken_at', endOfDay.toIso8601String());
+      
+      // Find logs where the hour and minute of scheduled_time match
+      final matchingLogs = logs.where((log) {
+        final logScheduleTime = DateTime.parse(log['scheduled_time']);
+        return logScheduleTime.hour == scheduledDateTime.hour && 
+               logScheduleTime.minute == scheduledDateTime.minute;
+      }).toList();
+      
+      if (matchingLogs.isNotEmpty) {
+        // Delete the most recent log that matches
+        await _supabase
+            .from(_logsTable)
+            .delete()
+            .eq('id', matchingLogs.last['id']);
+      }
+    } catch (e) {
+      print('Error in undoMedicationTaken: $e');
+      rethrow;
+    }
+  }
+
+  // This method helps check if a medication was taken at a specific time today
+  Future<bool> wasMedicationTakenToday(String medicationId, DateTime scheduleTime) async {
+    try {
+      // Get today's start and end times
+      final now = _currentTime;
+      final startOfDay = DateTime(now.year, now.month, now.day);
+      final endOfDay = startOfDay.add(const Duration(days: 1));
+      
+      // Create a datetime with today's date but with scheduled time's hour and minute
+      final scheduledDateTime = DateTime(
+        now.year,
+        now.month,
+        now.day,
+        scheduleTime.hour,
+        scheduleTime.minute,
+      );
+      
+      final logs = await _supabase
+          .from(_logsTable)
+          .select()
+          .eq('medication_id', medicationId)
+          .eq('username', _currentUser)
+          .gte('taken_at', startOfDay.toIso8601String())
+          .lt('taken_at', endOfDay.toIso8601String());
+      
+      // Check if any log matches the scheduled time (hour and minute)
+      return logs.any((log) {
+        final logScheduleTime = DateTime.parse(log['scheduled_time']);
+        return logScheduleTime.hour == scheduledDateTime.hour && 
+               logScheduleTime.minute == scheduledDateTime.minute;
+      });
+    } catch (e) {
+      print('Error in wasMedicationTakenToday: $e');
+      return false;
     }
   }
 
@@ -159,6 +243,53 @@ class MedicationService {
       return Stream.value([]);
     }
   }
+
+  Stream<List<Map<String, dynamic>>> getAllMedicationLogsStream() {
+  try {
+    // First, get the base stream from the logs table
+    final logsStream = _supabase
+        .from(_logsTable)
+        .stream(primaryKey: ['id'])
+        .eq('username', _currentUser);
+
+    // Transform the stream with medication names
+    return logsStream.asyncMap((rows) async {
+      if (rows.isEmpty) return [];
+
+      // Fetch related medication data
+      final medicationIds = rows.map((row) => row['medication_id']).toSet().toList();
+      
+      // If there are no medication IDs, return the rows as is
+      if (medicationIds.isEmpty) return rows;
+
+      final medications = await _supabase
+          .from(_tableName)
+          .select('id, name')
+          .filter('id', 'in', medicationIds);
+      
+      // Create a map for quick medication name lookup
+      final medicationNames = Map.fromEntries(
+        medications.map((med) => MapEntry(med['id'], med['name']))
+      );
+      
+      // Add medication names to the logs
+      final logsWithNames = rows.map((row) => {
+        ...row,
+        'medication_name': medicationNames[row['medication_id']] ?? 'Unknown Medication'
+      }).toList();
+      
+      // Sort by taken_at in descending order
+      logsWithNames.sort((a, b) => 
+        DateTime.parse(b['taken_at']).compareTo(DateTime.parse(a['taken_at']))
+      );
+      
+      return logsWithNames;
+    });
+  } catch (e) {
+    print('Error in getAllMedicationLogsStream: $e');
+    return Stream.value([]);
+  }
+}
 
   Stream<List<Medication>> getTodaysMedicationsStream() {
     return getMedicationsStream().map((medications) {

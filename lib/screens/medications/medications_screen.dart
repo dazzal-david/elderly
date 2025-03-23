@@ -2,6 +2,7 @@ import 'package:elderly_care/screens/medications/medication_form_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:elderly_care/models/medication_model.dart';
 import 'package:elderly_care/services/medication_service.dart';
+import 'package:elderly_care/screens/medications/medication_logs_screen.dart';
 import 'package:intl/intl.dart';
 
 class MedicationsScreen extends StatefulWidget {
@@ -20,6 +21,17 @@ class _MedicationsScreenState extends State<MedicationsScreen> {
       appBar: AppBar(
         title: const Text('Medications'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.history),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const MedicationLogsScreen(),
+                ),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.add),
             onPressed: () => _showAddMedicationDialog(context),
