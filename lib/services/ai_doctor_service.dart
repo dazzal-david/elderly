@@ -22,7 +22,7 @@ class AIDoctorService {
   }
 
   static const String _baseUrl = 'https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.3';
-  static const String _apiKey = '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';
+  static const String _apiKey = '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';
 
 
   Future<Map<String, dynamic>?> _getUserProfile() async {
