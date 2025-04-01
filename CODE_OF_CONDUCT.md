@@ -26,7 +26,7 @@ The following behaviors are considered unacceptable and will not be tolerated:
 
 ## Reporting Violations
 
-If you experience or witness any behavior that violates this Code of Conduct, please report it to the project maintainers at **[your email/contact]**. All reports will be handled confidentially and addressed promptly.
+If you experience or witness any behavior that violates this Code of Conduct, please report it to the project maintainers at **elderly@gmail.com**. All reports will be handled confidentially and addressed promptly.
 
 ## Enforcement
 
