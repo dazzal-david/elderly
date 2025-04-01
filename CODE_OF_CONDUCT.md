@@ -38,7 +38,7 @@ Violations of this Code of Conduct may result in:
 
 ## Acknowledgment
 
-This Code of Conduct is adapted from the Contributor Covenant (version 2.0) and aims to promote a positive and welcoming community.
+This Code of Conduct is adapted from the Contributor Covenant (version 1.0) and aims to promote a positive and welcoming community.
 
 ---
 
